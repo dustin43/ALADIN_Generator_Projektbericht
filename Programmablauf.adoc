@@ -1,0 +1,253 @@
+= Programmablauf zum {project-name}
+include::_includes/defaulr-attributes.inc.adoc[]
+
+== Technische Lösung
+Es gibt eine Klasse _Start_, welche den _AppContext_ instanziiert und
+_AppContext.startKonfiguration()_ aufruft.
+
+Im _AppContext_ steckt die Programmlogik, welche wie folgt aussieht:
+
+=== Klassendiagramm
+.Klassendiagramm der Konsolenanwendung (eingeklappt)
+image::../images/KlassendiagrammKonsolenanwendung.png[Klassendiagramm: eingeklappt]
+
+.Klassendiagramm der Konsolenanwendung (ausgeklappt)
+image::../images/KlassendiagrammKonsolenanwendungAusgeklappt.png[Klassendiagramm: ausgeklappt]
+
+
+=== Funktion: startKonfiguration()
+* Konfiguration des Feldes und der Sortierung mittels _Konfigurator_Sortierung_
+* Aufruf: _feld_konfigurieren()_, _sortierung_konfigurieren()_
+** Nutzereingaben
+** Output: Länge des Feldes (Anzahl), Zeichenart (numerisch / alphanumerisch), Reihenfolge
+(aufsteigend / absteigend), Sortieralgorithmus (Bubblesort / Insertsort / Quicksort / Mergesort)
+* Aufruf: _feld_generieren()
+** Generierung des Feldes unter Berücksichtigung der Nutzereingaben Anzahl und Zeichenart
+
+
+=== Verhalten der Klasse setzen (Strategy pattern)
+* das Strategy pattern sorgt dafür, dass dem _AppContext_ ein gewisses Verhalten zugewiesen werden kann
+* dies macht den Code übersichtlicher und kürzer, denn die Funktion _sortieren()_ muss nur
+einmal aufgerufen werden und im eigentlichen Sortieralgorithmus kann auf weitere if-Abfragen
+verzichtet werden
+* setSortierverhalten: setzt das Sortierverhalten (numerisch aufsteigend / numerisch absteigend /
+alphanumerisch aufsteigend / alphanumerisch absteigend)
+* setSortieralgorithmus: setzt den Sortieralgorithmus mittels angegebenen Algorithmus
+
+==== UML Diagramm
+.UML-Diagramm zum Strategy pattern
+image::../images/StrategyPattern.png[UML: Strategy pattern]
+
+
+=== Funktion: sortieren()
+* jeder Sortieralgorithmus hat seine eigene _sortieren()_ Funktion
+* durch das vorherige Setzen des Sortieralgorithmus wird die _sortieren()_ Funktion des gewählten Algorithmus
+aufgerufen
+* die Funktion sortiert das generierte Feld schrittweise und speichert jeden Sortierschritt
+in einer ArrayList _liste_system_ vom Typ Sortierschritt
+* jeder Sortierschritt enthält das aktuelle Feld, die beiden getauschten Elemente, sowie die Indexe
+der jeweiligen Elemente
+* um zu entscheiden, ob der Algorithmus das Feld aufsteigend oder absteigend sortieren soll und
+ob es sich um ein numerisches oder alphanumerisches Feld handelt, wird dem Sortieralgorithmen
+das vorher festgelegte Sortierverhalten mitgegeben
+* jede Entscheidung, welche sich auf die Sortierung auswirkt, ist ausgelagert und wird
+je nach Verhalten aufgerufen
+* der Algorithmus bricht automatisch ab, sobald das Feld fertig sortiert wurde
+
+
+=== Funktion: startAuswertung()
+* Konfiguration der Auswertung mittels Konfigurator_Auswertung
+* Aufruf: _auswertung_konfigurieren()_
+** Nutzereingaben
+** Output: Auswertungsverfahren
+* setAuswertungsverhalten: setzt das Auswertungsverfahren
+* mögliche Auswertungsverfahren:
+** Gesamtes Feld ausgeben
+** Feld schrittweise ausgeben
+** Übungsmodus (Feld mit Hilfe lösen)
+** Prüfungsmodus (Feld ohne Hilfe lösen)
+* Aufruf der Funktion _auswerten()_
+
+
+=== Funktion auswerten()
+* jedes Auswertungsverfahren hat eine eigene _auswerten()_ Funktion
+* dank des Strategy pattern muss auch diese im _AppContext_ nur einmal aufgerufen werden
+
+
+==== Gesamtes Feld ausgeben
+* in diesem Auswertungsverfahren werden alle Sortierschritte, sowie die getauschten
+Elemente zur besseren Übersich ausgegeben
+
+
+==== Feld schrittweise ausgeben
+* in diesem Auswertungsverfahren hat der Nutzer die Möglichkeit, sich die Sortierschritte
+schrittweise (mittels ENTER) anzuzeigen und bei Bedarf zum letzten Schritt zurückzuspringen
+
+
+==== Übungsmodus
+* in diesem Auswertungsverfahren sortiert der Nutzer das generierte Feld selbst
+* hierfür werden die Indexe der zu tauschenden Elemente eingegeben
+* ist der Schritt richtig, wird er vom System akzeptiert und der Nutzer wird
+zur Eingabe der nächsten Indexe aufgefordert
+* ist der Schritt falsch, so wird der Nutzer darüber benachrichtigt und muss diesen
+Schritt neu sortieren
+* nach drei falschen Eingaben bietet das System hilfe an
+* akzeptiert der Nutzer, so wird der aktuelle Sortierschritt vom System angezeigt
+* am Ende gibt es eine kleine Auswertung, welche die Fehler des Nutzers zeigt
+
+
+==== Prüfungsmodus: Sortierung
+* in diesem Auswertungsverfahren sortiert der Nutzer das generierte Feld selbst
+* hierfür werden die Indexe der zu tauschenden Elemente eingegeben
+* jeder Sortierschritt wird wie im Sortieralgorithmus in einer Arraylist _liste_nutzer_ vom
+Typ Sortierschritt gespeichert
+* die Sortierung kann beendet werden, in dem der Nutzer für beide Indexe 'F' eingibt
+* sollte der Nutzer im ersten Index versehentlich eine falsche Zahl eingegeben haben,
+besteht die Möglichkeit, im zweiten Index die selbe Zahl einzugeben, um den Schritt
+aus der Auswertung zu nehmen
+
+
+==== Prüfungsmodus: Vergleich
+* nachdem der Nutzer mit der Sortierung fertig ist, beginnt die eigentliche Auswertung
+der Lösung
+* zuerst werden die beiden ArrayLists _liste_system_ und _liste_nutzer_ vollständig ausgegeben
+* anschließend werden die einzelnen Sortierschritte in den beiden Listen vergleichen
+* hierfür dient die Funktion _Arrays.equals()_
+* im Vergleich der jeweiligen Sortierschritte sind folgende Szenarien möglich:
+** Schritt ist richtig
+** Schritt ist falsch
+** Schritt ist zusätzlich - der Nutzer hat zu viele Schritte für die Sortierung benötigt
+** Schritt fehlt - der Nutzer hat Schritte übersprungen oder vergessen
+* je nach eingetretenem Szenario beim Vergleich, wird diesem Szenario ein Punkt gutgeschrieben
+
+
+==== Prüfungsmodus: Punktevergabe
+* am Ende des Vergleichs kommt es zur Berechnung der Gesamtpunktzahl
+* grundsätzlich bringt jede Aufgabe insgesamt 10 Punkte
+* dies dient zur einheitlichen Punktevergabe, unabhängig der benötigten Sortierschritte
+* damit bei richtiger Sortierung 10 Punkte erreicht werden können, muss ein Punkt eine Werigkeit bekommen
+* diese Wertigkeit berechnet sich aus: 10 / (Anzahl der Sortierschritte, die das System benötigt hat)
+* angenommen das System hat 5 Schritte gebraucht, dann ist die Wertigkeit für einen Punkt 2
+* hat der Nutzer nun alle 5 Schritte richtig sortiert, so errechnet sich seine Punkzzahl aus 2 * 5,
+was eine Gesamtpunktzahl von 10 Punkten bringt
+* Punktabzüge gibt es für folgende Szenarios: falsche Schritte und zusätzliche Schritte
+* fehlende Sortierschritte führen zu keinem Punktabzug, werden bei der Auswertung jedoch mit aufgeführt
+* Generell wird die Gesamtpunktzahl somit folgendermaßen berechnet:
+* (richtige Schritte) * Wertigkeit - (falsche Schritte) * Wertigkeit - (zusätzliche Schritte) * Wertigkeit
+
+
+=== Programmabschluss
+* nach abgeschlossener Auswertung bleiben dem Nutzer 3 Möglichkeiten:
+** Das Feld und die Sortierung können neu konfiguriert werden
+** Es kann ein neues Auswertungsverfahren gewählt werden
+** das Programm kann beendet werden
+* je nach Auswahl des Nutzers springt das Programm zum gegebenen Punkt
+
+
+== Konsolenanwendung
+=== Konfiguration
+Im folgenden Beispiel wird zuerst das Feld und anschließend die Sortierung konfiguriert.
+Der Nutzer entscheidet sich für ein numerisches Feld mit 5 Elementen, welches mit dem
+Bubblesort-Algorithmus aufsteigend sortiert werden soll.
+
+.Feld konfigurieren
+image::../images/1_1_Feld_konfigurieren.JPG[Feld konfigurieren]
+
+.Sortierung konfigurieren
+image::../images/1_2_Sortierung_konfigurieren.JPG[Sortierung konfigurieren]
+
+.Zusammenfassung der Konfiguration
+image::../images/1_3_Konfiguration_Zusammenfassung.JPG[Zusammenfassung]
+
+
+=== Auswertung
+Der Nutzer hat die Wahl zwischen 4 verschiedenen Auswertungsverfahren.
+
+.Auswertung konfigurieren
+image::../images/2_0_Auswertung_konfigurieren.JPG[Auswertung konfigurieren]
+
+
+==== Ganzes Feld anzeigen
+.Ganzes Feld anzeigen
+image::../images/2_1_Ganzes_Feld_anzeigen.JPG[Ganzes Feld anzeigen]
+
+
+==== Feld schrittweise anzeigen
+.Feld schrittweise anzeigen
+image::../images/2_2_Feld_schrittweise_anzeigen.JPG[Feld schrittweise anzeigen]
+
+
+==== Übungsmodus
+Folgendes Beispiel zeigt eine erfolgreiche Sortierung im Übungsmodus.
+
+.Übungsmodus: Richtige Sortierung
+image::../images/2_3_1_Uebungsmodus_richtig.JPG[ÜM: Richtig sortiert]
+
+Folgendes Beispiel zeigt eine falsche Sortierung im Übungsmodus.
+Nach drei falschen Eingaben wird dem Nutzer vom System Hilfe angeboten.
+
+.Übungsmodus: Falsche Sortierung mit Hilfestellung
+image::../images/2_3_2_Uebungsmodus_falsch.JPG[ÜM: Falsch sortiert]
+
+Nach abgeschlossener Sortierung gibt es eine kurze Auswertung.
+
+.Übungsmodus: Auswertung
+image::../images/2_3_3_Uebungsmodus_auswerten.JPG[ÜM: Auswertung]
+
+
+==== Prüfungsmodus
+===== Prüfungsmodus: Sortierung
+Im Prüfungsmodus sortiert der Nutzer das generierte Feld ohne Hilfe.
+Anschließend gibt es eine Auswertung und Punktevergabe.
+
+.Prüfungsmodus: Sortierung des Feldes
+image::../images/2_4_1_Pruefungsmodus_sortieren.JPG[PM: Sortieren]
+
+Sollte ein Nutzer beim ersten Index eine falsche Eingabe gemacht haben,
+kann der die Eingabe im zweiten Index wiederholen und diesen Schritt somit
+aus der Wertung nehmen bzw. überspringen.
+
+Folgendes Beispiel zeigt eine erfolgreiche Sortierung im Übungsmodus.
+
+.Prüfungsmodus: Schritt überspringen
+image::../images/2_4_1_Pruefungsmodus_sortieren_ueberspringen.JPG[PM: Schritt überspringen]
+
+Soll die Sortierung verglichen werden, so muss man für beide Indexe 'F' eingeben.
+
+.Prüfungsmodus: Sortierung beenden
+image::../images/2_4_1_Pruefungsmodus_sortieren_abschließen.JPG[PM: Sortierung beenden]
+
+
+===== Prüfungsmodus: Vergleich
+Nachdem die Sortierung beendet ist, werden zuerst die beiden Listen ausgegeben
+und anschließend die jeweiligen Sortierschritte miteinander verglichen.
+
+.Prüfungsmodus: Listen mit den Sortierschritten ausgeben
+image::../images/2_4_1_Pruefungsmodus_Listen_vergleichen.JPG[PM: Listen ausgeben]
+
+Beim Vergleich der Sortierschritte können verschiedene Szenarien auftreten:
+Ein Schritt ist richtig, ein Schritt ist falsch, ein Schritt fehlt oder ein Schritt ist zusätzlich.
+
+.Prüfungsmodus: Schritte vergleichen - richtiger Schritt
+image::../images/2_4_1_Pruefungsmodus_Schritte_vergleichen.JPG[PM: Schritt richtig]
+
+.Prüfungsmodus: Schritte vergleichen - falscher und zusätzlicher Schritt
+image::../images/2_4_2_Pruefungsmodus_sortieren_falsch_zusaetzlich.JPG[PM: Schritt falsch]
+
+===== Prüfungsmodus: Punktevergabe
+Beim Vergleichen der Schritte werden den jeweiligen Szenarios Punkte zugeschrieben
+und anschließend ausgewertet.
+
+.Prüfungsmodus: Punktevergabe bei Fehlern
+image::../images/2_4_2_Pruefungsmodus_berechnen_Fehler.JPG[PM: Punktevergabe bei Fehlern]
+
+.Prüfungsmodus: Punktevergabe bei voller Punktzahl
+image::../images/2_4_1_Pruefungsmodus_berechnen.JPG[PM: Punktevergabe volle Punktzahl]
+
+
+=== Programmabschluss
+Am Ende kann der Nutzer das Feld und die Sortierung neu konfigurieren, ein neues
+Auswertungsverfahren wählen oder das Programm beenden.
+
+.Programmabschluss
+image::../images/2_5_0_Abschluss.JPG[PM: Schritt überspringen]
